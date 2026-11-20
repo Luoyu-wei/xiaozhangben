@@ -1,0 +1,947 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>小账本 · 日常消费记录</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg: #f5f6fa;
+            --text: #1c2333;
+            --muted: #7b8496;
+            --line: #e7eaf0;
+            --brand: #4f7cff;
+            --brand2: #7c5cff;
+            --danger: #ff5b5b
+        }
+
+        body {
+            font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased
+        }
+
+        .hidden {
+            display: none !important
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fbfcfe;
+            outline: none;
+            transition: .18s
+        }
+
+            input:focus, select:focus {
+                border-color: var(--brand);
+                background: #fff;
+                box-shadow: 0 0 0 3px rgba(79,124,255,.13)
+            }
+
+        .field {
+            display: block;
+            margin-bottom: 14px
+        }
+
+            .field > span {
+                display: block;
+                font-size: 13px;
+                color: var(--muted);
+                font-weight: 600;
+                margin-bottom: 6px
+            }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 11px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            background: #eef1f7;
+            color: var(--text);
+            transition: .2s
+        }
+
+            .btn.primary {
+                background: linear-gradient(135deg,var(--brand),var(--brand2));
+                color: #fff;
+                box-shadow: 0 8px 18px -6px rgba(79,124,255,.6)
+            }
+
+            .btn.ghost {
+                background: transparent;
+                border: 1px solid var(--line);
+                color: var(--muted)
+            }
+
+            .btn.sm {
+                padding: 7px 12px;
+                font-size: 13px;
+                border-radius: 9px
+            }
+
+            .btn.block {
+                width: 100%
+            }
+
+            .btn:disabled {
+                opacity: .6;
+                cursor: not-allowed
+            }
+
+        /* 登录页 */
+        #authView {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg,#eef2ff,#fdf2ff 45%,#e9faf5)
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+            background: #fff;
+            border-radius: 24px;
+            padding: 32px 28px;
+            box-shadow: 0 20px 60px -20px rgba(40,60,120,.28)
+        }
+
+        .auth-brand {
+            text-align: center;
+            margin-bottom: 22px
+        }
+
+            .auth-brand .logo {
+                font-size: 38px
+            }
+
+            .auth-brand h1 {
+                font-size: 22px;
+                margin-top: 8px
+            }
+
+            .auth-brand p {
+                font-size: 13px;
+                color: var(--muted);
+                margin-top: 4px
+            }
+
+        .tabs {
+            display: flex;
+            background: #f1f3f9;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px
+        }
+
+        .tab {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 9px;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--muted);
+            transition: .2s
+        }
+
+            .tab.active {
+                background: #fff;
+                color: var(--brand);
+                box-shadow: 0 2px 8px rgba(30,50,110,.1)
+            }
+
+        .auth-msg {
+            font-size: 13px;
+            min-height: 18px;
+            margin-bottom: 10px;
+            line-height: 1.5
+        }
+
+            .auth-msg.err {
+                color: var(--danger)
+            }
+
+        .hint {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 16px;
+            line-height: 1.6
+        }
+
+        /* 主界面 */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 22px 20px 14px
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-weight: 800;
+            font-size: 17px
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg,var(--brand),var(--brand2));
+            color: #fff;
+            font-weight: 700
+        }
+
+        main {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 20px 70px
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 20px;
+            border: 1px solid rgba(231,234,240,.9);
+            box-shadow: 0 1px 3px rgba(20,30,60,.05),0 10px 28px -18px rgba(20,30,60,.25)
+        }
+
+            .card h2 {
+                font-size: 15px;
+                margin-bottom: 16px
+            }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 14px;
+            margin-bottom: 18px
+        }
+
+        .stat {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px 18px;
+            border: 1px solid rgba(231,234,240,.9);
+            box-shadow: 0 1px 3px rgba(20,30,60,.05),0 10px 28px -18px rgba(20,30,60,.25)
+        }
+
+            .stat .label {
+                font-size: 12px;
+                color: var(--muted);
+                font-weight: 600
+            }
+
+            .stat .value {
+                font-size: 22px;
+                font-weight: 800;
+                margin-top: 6px;
+                letter-spacing: -.5px
+            }
+
+        .columns {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 18px;
+            align-items: start;
+            margin-bottom: 18px
+        }
+
+        .money-input {
+            position: relative
+        }
+
+            .money-input > span {
+                position: absolute;
+                left: 13px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--muted);
+                font-weight: 700
+            }
+
+            .money-input input {
+                padding-left: 30px;
+                font-size: 19px;
+                font-weight: 800
+            }
+
+        .chips {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 6px
+        }
+
+        .chip {
+            border: 1px solid var(--line);
+            background: #fbfcfe;
+            border-radius: 10px;
+            padding: 7px 2px;
+            font-size: 11px;
+            text-align: center;
+            color: var(--muted);
+            transition: .18s;
+            line-height: 1.35
+        }
+
+            .chip .ico {
+                display: block;
+                font-size: 16px;
+                margin-bottom: 1px
+            }
+
+            .chip.active {
+                border-color: var(--brand);
+                background: rgba(79,124,255,.1);
+                color: var(--brand);
+                font-weight: 700
+            }
+
+        .list-head {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px
+        }
+
+            .list-head h2 {
+                margin: 0
+            }
+
+        .filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+            .filters input, .filters select {
+                width: auto;
+                padding: 8px 10px;
+                font-size: 13px;
+                border-radius: 9px
+            }
+
+        .list {
+            list-style: none;
+            max-height: 430px;
+            overflow-y: auto;
+            margin: 0 -6px;
+            padding: 0 6px
+        }
+
+            .list::-webkit-scrollbar {
+                width: 6px
+            }
+
+            .list::-webkit-scrollbar-thumb {
+                background: #dde2ec;
+                border-radius: 3px
+            }
+
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 2px;
+            border-bottom: 1px solid var(--line)
+        }
+
+            .item:last-child {
+                border-bottom: none
+            }
+
+            .item .ico {
+                width: 38px;
+                height: 38px;
+                border-radius: 11px;
+                display: grid;
+                place-items: center;
+                font-size: 18px;
+                flex-shrink: 0
+            }
+
+            .item .meta {
+                flex: 1;
+                min-width: 0
+            }
+
+                .item .meta .t {
+                    font-weight: 600;
+                    font-size: 14px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis
+                }
+
+                .item .meta .s {
+                    font-size: 12px;
+                    color: var(--muted);
+                    margin-top: 2px
+                }
+
+            .item .amt {
+                font-weight: 800;
+                font-size: 14px;
+                white-space: nowrap
+            }
+
+            .item .del {
+                width: 28px;
+                height: 28px;
+                border-radius: 8px;
+                border: none;
+                background: transparent;
+                color: var(--muted);
+                font-size: 14px;
+                opacity: 0;
+                transition: .18s;
+                flex-shrink: 0
+            }
+
+            .item:hover .del {
+                opacity: 1
+            }
+
+            .item .del:hover {
+                background: #ffecec;
+                color: var(--danger)
+            }
+
+        .empty {
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            padding: 38px 10px
+        }
+
+        .chart {
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .bar-row {
+            display: grid;
+            grid-template-columns: 92px 1fr 100px;
+            gap: 12px;
+            align-items: center;
+            font-size: 13px
+        }
+
+        .bar-label {
+            color: var(--muted);
+            font-weight: 600;
+            white-space: nowrap
+        }
+
+        .bar-track {
+            height: 10px;
+            background: #f0f2f7;
+            border-radius: 6px;
+            overflow: hidden
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width .55s cubic-bezier(.2,.8,.2,1)
+        }
+
+        .bar-val {
+            text-align: right;
+            font-weight: 700
+        }
+
+        #toast {
+            position: fixed;
+            left: 50%;
+            bottom: 34px;
+            transform: translate(-50%,20px);
+            background: rgba(28,35,51,.94);
+            color: #fff;
+            padding: 11px 20px;
+            border-radius: 11px;
+            font-size: 13.5px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: .28s;
+            z-index: 99
+        }
+
+            #toast.show {
+                opacity: 1;
+                transform: translate(-50%,0)
+            }
+
+        @media(max-width:880px) {
+            .columns {
+                grid-template-columns: 1fr
+            }
+
+            .summary {
+                grid-template-columns: repeat(2,1fr)
+            }
+        }
+
+        @media(max-width:520px) {
+            .stat {
+                padding: 13px 14px
+            }
+
+                .stat .value {
+                    font-size: 18px
+                }
+
+            .list {
+                max-height: none
+            }
+
+            .filters {
+                width: 100%
+            }
+
+                .filters input, .filters select {
+                    width: 100%
+                }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 登录 / 注册 -->
+    <div id="authView">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <div class="logo">💰</div>
+                <h1>小账本</h1>
+                <p>记录每一笔日常消费</p>
+            </div>
+            <div class="tabs">
+                <button class="tab active" data-tab="login" type="button">登录</button>
+                <button class="tab" data-tab="register" type="button">注册</button>
+            </div>
+            <form id="authForm" autocomplete="off" novalidate>
+                <label class="field">
+                    <span>用户名</span>
+                    <input id="authUser" type="text" placeholder="2-16 个字符" maxlength="16" autocomplete="username">
+                </label>
+                <label class="field">
+                    <span>密码</span>
+                    <input id="authPass" type="password" placeholder="至少 4 位" maxlength="32" autocomplete="current-password">
+                </label>
+                <label class="field hidden" id="confirmField">
+                    <span>确认密码</span>
+                    <input id="authPass2" type="password" placeholder="再次输入密码" maxlength="32" autocomplete="new-password">
+                </label>
+                <div class="auth-msg" id="authMsg"></div>
+                <button class="btn primary block" type="submit" id="authSubmit">登 录</button>
+            </form>
+            <p class="hint">账号数据保存在服务器，换设备登录也能同步。</p>
+        </div>
+    </div>
+
+    <!-- 主应用 -->
+    <div id="appView" class="hidden">
+        <header class="topbar">
+            <div class="brand"><span>💰</span><span>小账本</span></div>
+            <div class="user-area">
+                <span class="avatar" id="avatar">U</span>
+                <span id="userName"></span>
+                <button class="btn ghost sm" id="logoutBtn" type="button">退出</button>
+            </div>
+        </header>
+
+        <main>
+            <section class="summary" id="summary"></section>
+
+            <div class="columns">
+                <section class="card">
+                    <h2>✍️ 记一笔</h2>
+                    <form id="expenseForm" autocomplete="off">
+                        <label class="field">
+                            <span>金额</span>
+                            <div class="money-input">
+                                <span>¥</span>
+                                <input id="amount" type="number" step="0.01" min="0.01" placeholder="0.00" inputmode="decimal">
+                            </div>
+                        </label>
+                        <div class="field"><span>分类</span><div class="chips" id="chips"></div></div>
+                        <label class="field"><span>日期</span><input id="date" type="date"></label>
+                        <label class="field">
+                            <span>备注</span>
+                            <input id="note" type="text" placeholder="例如：和同事吃午饭" maxlength="30">
+                        </label>
+                        <button class="btn primary block" type="submit" id="addBtn">添加记录</button>
+                    </form>
+                </section>
+
+                <section class="card">
+                    <div class="list-head">
+                        <h2>📋 消费记录</h2>
+                        <div class="filters">
+                            <input type="month" id="filterMonth" title="按月份筛选">
+                            <select id="filterCat" title="按分类筛选"></select>
+                            <input type="search" id="filterKw" placeholder="搜索备注">
+                            <button class="btn ghost sm" id="exportBtn" type="button">导出</button>
+                        </div>
+                    </div>
+                    <ul class="list" id="list"></ul>
+                </section>
+            </div>
+
+            <section class="card">
+                <h2>📊 分类统计</h2>
+                <div class="chart" id="chart"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+/* ============ 基础 ============ */
+const CATS = [
+  { name:'餐饮', icon:'🍜', color:'#ff7a59' },
+  { name:'交通', icon:'🚌', color:'#4d9eff' },
+  { name:'购物', icon:'🛍️', color:'#ff5c9e' },
+  { name:'居住', icon:'🏠', color:'#8b7cff' },
+  { name:'娱乐', icon:'🎮', color:'#ffb43d' },
+  { name:'医疗', icon:'💊', color:'#2ed4a5' },
+  { name:'教育', icon:'📚', color:'#38c1d4' },
+  { name:'其他', icon:'📦', color:'#9aa4b2' },
+];
+const $ = s => document.querySelector(s);
+const catOf = n => CATS.find(c => c.name === n) || CATS[CATS.length - 1];
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => '¥' + Number(n || 0).toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2});
+const pad2 = n => String(n).padStart(2, '0');
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; };
+const currentMonth = () => todayStr().slice(0, 7);
+
+let toastTimer;
+function toast(msg){
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+async function api(url, opts = {}){
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    ...opts
+  });
+  let data = null;
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) throw new Error((data && data.error) || '请求失败');
+  return data;
+}
+
+/* ============ 状态 ============ */
+const state = {
+  expenses: [],
+  newCategory: '餐饮',
+  filter: { month: currentMonth(), category: 'all', keyword: '' }
+};
+
+/* ============ 登录注册 ============ */
+let authMode = 'login';
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    authMode = tab.dataset.tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
+    $('#confirmField').classList.toggle('hidden', authMode !== 'register');
+    $('#authSubmit').textContent = authMode === 'login' ? '登 录' : '注 册';
+    const m = $('#authMsg');
+    m.textContent = ''; m.className = 'auth-msg';
+  });
+});
+
+$('#authForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const msg = $('#authMsg');
+  msg.className = 'auth-msg';
+
+  const username = $('#authUser').value.trim();
+  const password = $('#authPass').value;
+
+  if (username.length < 2 || username.length > 16 || /\s/.test(username)) {
+    msg.textContent = '用户名需为 2-16 个字符且不含空格'; msg.classList.add('err'); return;
+  }
+  if (password.length < 4) {
+    msg.textContent = '密码至少 4 位'; msg.classList.add('err'); return;
+  }
+
+  const btn = $('#authSubmit');
+  btn.disabled = true;
+
+  try {
+    if (authMode === 'register') {
+      if (password !== $('#authPass2').value) throw new Error('两次输入的密码不一致');
+      await api('/api/register', { method: 'POST', body: JSON.stringify({ username, password }) });
+      toast('注册成功，正在登录…');
+    }
+    await api('/api/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+    $('#authForm').reset();
+    await enterApp();
+  } catch (err) {
+    msg.textContent = err.message;
+    msg.classList.add('err');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ============ 进入 / 退出 ============ */
+async function enterApp(){
+  const me = await api('/api/me');
+  state.expenses = await api('/api/expenses');
+  state.filter = { month: currentMonth(), category: 'all', keyword: '' };
+
+  $('#userName').textContent = me.username;
+  $('#avatar').textContent = me.username.slice(0, 1).toUpperCase();
+  $('#filterMonth').value = state.filter.month;
+  $('#filterCat').value = 'all';
+  $('#filterKw').value = '';
+  $('#date').value = todayStr();
+
+  $('#authView').classList.add('hidden');
+  $('#appView').classList.remove('hidden');
+  render();
+}
+
+$('#logoutBtn').addEventListener('click', async () => {
+  try { await api('/api/logout', { method: 'POST' }); } catch (e) {}
+  state.expenses = [];
+  $('#appView').classList.add('hidden');
+  $('#authView').classList.remove('hidden');
+  toast('已退出登录');
+});
+
+/* ============ 渲染 ============ */
+function getFiltered(){
+  const { month, category, keyword } = state.filter;
+  const kw = keyword.toLowerCase();
+  return state.expenses
+    .filter(e =>
+      (!month || (e.date || '').startsWith(month)) &&
+      (category === 'all' || e.category === category) &&
+      (!kw || (e.note || '').toLowerCase().includes(kw)))
+    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+}
+
+function render(){ renderSummary(); renderList(); renderChart(); }
+
+function renderSummary(){
+  const list = getFiltered();
+  const total = list.reduce((s, e) => s + e.amount, 0);
+  const max = list.reduce((m, e) => Math.max(m, e.amount), 0);
+  let days = 30;
+  if (state.filter.month) {
+    const [y, m] = state.filter.month.split('-').map(Number);
+    days = new Date(y, m, 0).getDate();
+    const now = new Date();
+    if (y === now.getFullYear() && m === now.getMonth() + 1) days = now.getDate();
+  }
+  const avg = total / Math.max(days, 1);
+  $('#summary').innerHTML = `
+    <div class="stat"><div class="label">总支出</div><div class="value">${fmt(total)}</div></div>
+    <div class="stat"><div class="label">记录笔数</div><div class="value">${list.length}</div></div>
+    <div class="stat"><div class="label">最大单笔</div><div class="value">${fmt(max)}</div></div>
+    <div class="stat"><div class="label">日均支出</div><div class="value">${fmt(avg)}</div></div>`;
+}
+
+function renderList(){
+  const list = getFiltered();
+  const ul = $('#list');
+  if (!list.length) {
+    ul.innerHTML = '<li class="empty">暂时没有记录，快去记一笔吧 ✍️</li>';
+    return;
+  }
+  ul.innerHTML = list.map(e => {
+    const c = catOf(e.category);
+    return `<li class="item" data-id="${e.id}">
+      <span class="ico" style="background:${c.color}22;color:${c.color}">${c.icon}</span>
+      <div class="meta">
+        <div class="t">${esc(e.note || c.name)}</div>
+        <div class="s">${c.name} · ${esc(e.date)}</div>
+      </div>
+      <div class="amt">-${fmt(e.amount)}</div>
+      <button class="del" type="button" data-del="${e.id}" title="删除">✕</button>
+    </li>`;
+  }).join('');
+}
+
+function renderChart(){
+  const list = getFiltered();
+  const box = $('#chart');
+  if (!list.length) { box.innerHTML = '<div class="empty">暂无数据</div>'; return; }
+  const map = new Map();
+  list.forEach(e => map.set(e.category, (map.get(e.category) || 0) + e.amount));
+  const rows = [...map.entries()].sort((a, b) => b[1] - a[1]);
+  const max = rows[0][1];
+  box.innerHTML = rows.map(([name, val]) => {
+    const c = catOf(name);
+    const pct = max > 0 ? (val / max * 100) : 0;
+    return `<div class="bar-row">
+      <div class="bar-label">${c.icon} ${name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:linear-gradient(90deg,${c.color},${c.color}aa)"></div></div>
+      <div class="bar-val">${fmt(val)}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ============ 分类选择 ============ */
+function buildChips(){
+  $('#chips').innerHTML = CATS.map(c => `
+    <button type="button" class="chip ${c.name === state.newCategory ? 'active' : ''}" data-cat="${c.name}">
+      <span class="ico">${c.icon}</span>${c.name}
+    </button>`).join('');
+}
+$('#chips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  state.newCategory = chip.dataset.cat;
+  buildChips();
+});
+
+/* ============ 添加记录 ============ */
+$('#expenseForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const amount = parseFloat($('#amount').value);
+  if (!(amount > 0)) { toast('请输入正确的金额'); $('#amount').focus(); return; }
+
+  const body = {
+    amount,
+    category: state.newCategory,
+    date: $('#date').value || todayStr(),
+    note: $('#note').value.trim()
+  };
+
+  const btn = $('#addBtn');
+  btn.disabled = true;
+  try {
+    const item = await api('/api/expenses', { method: 'POST', body: JSON.stringify(body) });
+    state.expenses.push(item);
+
+    const m = item.date.slice(0, 7);
+    if (m !== state.filter.month) {
+      state.filter.month = m;
+      $('#filterMonth').value = m;
+    }
+    $('#amount').value = '';
+    $('#note').value = '';
+    render();
+    toast('已记录 ✓');
+    $('#amount').focus();
+  } catch (err) {
+    toast(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ============ 筛选 ============ */
+$('#filterMonth').addEventListener('change', e => {
+  state.filter.month = e.target.value; render();
+});
+$('#filterCat').addEventListener('change', e => {
+  state.filter.category = e.target.value; render();
+});
+let kwTimer;
+$('#filterKw').addEventListener('input', e => {
+  clearTimeout(kwTimer);
+  const v = e.target.value.trim();
+  kwTimer = setTimeout(() => { state.filter.keyword = v; render(); }, 180);
+});
+
+/* ============ 删除 ============ */
+$('#list').addEventListener('click', async e => {
+  const btn = e.target.closest('[data-del]');
+  if (!btn) return;
+  const id = btn.dataset.del;
+  const item = state.expenses.find(x => x.id === id);
+  if (!item) return;
+  if (!confirm(`确定删除这条记录吗？\n${item.category} · ${fmt(item.amount)} · ${item.date}`)) return;
+  try {
+    await api('/api/expenses/' + id, { method: 'DELETE' });
+    state.expenses = state.expenses.filter(x => x.id !== id);
+    render();
+    toast('已删除');
+  } catch (err) { toast(err.message); }
+});
+
+/* ============ 导出 CSV ============ */
+$('#exportBtn').addEventListener('click', () => {
+  const list = getFiltered();
+  if (!list.length) { toast('没有可导出的记录'); return; }
+  const rows = [['日期','分类','金额','备注'],
+    ...list.map(e => [e.date, e.category, e.amount.toFixed(2), e.note || ''])];
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `消费记录_${state.filter.month || '全部'}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('已导出 CSV');
+});
+
+/* ============ 初始化 ============ */
+(async function init(){
+  buildChips();
+  $('#filterCat').innerHTML = '<option value="all">全部分类</option>' +
+    CATS.map(c => `<option value="${c.name}">${c.icon} ${c.name}</option>`).join('');
+  $('#date').value = todayStr();
+  $('#filterMonth').value = currentMonth();
+
+  // 已登录则直接进入
+  try { await enterApp(); } catch (e) { /* 未登录，留在登录页 */ }
+})();
+    </script>
+</body>
+</html>
